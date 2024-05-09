@@ -5,7 +5,7 @@
         <Description>
             Solnet.Metaplex implements functionality to integrate Metaplex project into .Net applications.
         </Description>
-        <TargetFramework>net6.0</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
 
         <IsPackable>true</IsPackable>
 
