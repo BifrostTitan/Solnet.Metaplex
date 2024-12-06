@@ -36,13 +36,17 @@ namespace Solnet.Metaplex.Core
         /// <param name="signers"></param>
         /// <param name="feePayer"></param>
         /// <param name="transactionInstruction"></param>
+        /// <param name="computebudget"></param>
+        /// <param name="computeprice"></param>
         /// <returns></returns>
-        public async Task<RequestResult<string>> SendMetaplexTransaction(Account[] signers, PublicKey feePayer, TransactionInstruction transactionInstruction)
+        public async Task<RequestResult<string>> SendMetaplexTransaction(Account[] signers, PublicKey feePayer, TransactionInstruction transactionInstruction, ulong computebudget = 100000, ulong computeprice = 10000)
         {
             RequestResult<ResponseValue<LatestBlockHash>> blockHash = await RpcClient.GetLatestBlockHashAsync();
             byte[] Transaction = new TransactionBuilder().
                 SetRecentBlockHash(blockHash.Result.Value.Blockhash).
                 SetFeePayer(feePayer).
+                AddInstruction(ComputeBudgetProgram.SetComputeUnitLimit((uint)computebudget)).
+                AddInstruction(ComputeBudgetProgram.SetComputeUnitPrice(computeprice)).
                 AddInstruction(transactionInstruction).
                 Build(signers);
 
@@ -218,14 +222,39 @@ namespace Solnet.Metaplex.Core
         /// <param name="signers"></param>
         /// <param name="accounts"></param>
         /// <param name="createV1Args"></param>
+        /// <param name="computebudget"></param>
+        /// <param name="computeprice"></param>
         /// <returns></returns>
-        public async Task<RequestResult<string>> CreateV1Async(Account[] signers, CreateV1Accounts accounts, CreateV1Args createV1Args)
+        public async Task<RequestResult<string>> CreateNFTAsync(Account[] signers, CreateV1Accounts accounts, CreateV1Args createV1Args, ulong computebudget = 200000, ulong computeprice = 10000)
         {
             TransactionInstruction metaplex_create_instruction = MplCoreProgram.CreateV1(accounts, createV1Args);
-            return await SendMetaplexTransaction(signers, accounts.Payer, metaplex_create_instruction);
+            return await SendMetaplexTransaction(signers, accounts.Payer, metaplex_create_instruction, computebudget, computeprice);
         }
 
-
+        /// <summary>
+        /// Create Metaplex Core NFTs
+        /// </summary>
+        /// <param name="signers"></param>
+        /// <param name="asset"></param>
+        /// <param name="authority"></param>
+        /// <param name="owner"></param>
+        /// <param name="feepayer"></param>
+        /// <param name="createV1Args"></param>
+        /// <param name="computebudget"></param>
+        /// <param name="computeprice"></param>
+        /// <returns></returns>
+        public async Task<RequestResult<string>> CreateNFTAsync(Account[] signers, PublicKey asset, PublicKey authority, PublicKey owner, PublicKey feepayer,  CreateV1Args createV1Args, ulong computebudget = 100000, ulong computeprice = 10000)
+        {
+            CreateV1Accounts accounts = new CreateV1Accounts
+            {
+                Asset = asset,
+                Authority = authority,
+                Owner = owner,
+                Payer = feepayer,
+            };
+            TransactionInstruction metaplex_create_instruction = MplCoreProgram.CreateV1(accounts, createV1Args);
+            return await SendMetaplexTransaction(signers, accounts.Payer, metaplex_create_instruction, computebudget, computeprice);
+        }
 
         /// <summary>
         /// Create Metaplex Core Collections
@@ -403,7 +432,7 @@ namespace Solnet.Metaplex.Core
         /// <param name="accounts"></param>
         /// <param name="updateV1Args"></param>
         /// <returns></returns>
-        public async Task<RequestResult<string>> UpdateV1Async(Account[] signers, UpdateV1Accounts accounts, UpdateV1Args updateV1Args)
+        public async Task<RequestResult<string>> UpdateNFTAsync(Account[] signers, UpdateV1Accounts accounts, UpdateV1Args updateV1Args)
        {
            TransactionInstruction metaplex_instruction = MplCoreProgram.UpdateV1(accounts, updateV1Args);
             return await SendMetaplexTransaction(signers, accounts.Payer, metaplex_instruction);
@@ -427,10 +456,10 @@ namespace Solnet.Metaplex.Core
         /// <param name="accounts"></param>
         /// <param name="compressV1Args"></param>
         /// <returns></returns>
-        public async Task<RequestResult<string>> CompressV1Async(Account[] signers, CompressV1Accounts accounts, CompressV1Args compressV1Args)
+        public async Task<RequestResult<string>> CompressNFTAsync(Account[] signers, CompressV1Accounts accounts, CompressV1Args compressV1Args, ulong computebudget = 200000, ulong computeprice = 10000)
        {
            TransactionInstruction metaplex_instruction = MplCoreProgram.CompressV1(accounts, compressV1Args);
-            return await SendMetaplexTransaction(signers, accounts.Payer, metaplex_instruction);
+            return await SendMetaplexTransaction(signers, accounts.Payer, metaplex_instruction, computebudget, computeprice);
         }
         /// <summary>
         /// Decompress Metaplex Core Asset
